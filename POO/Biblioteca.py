@@ -1,4 +1,22 @@
 import mysql.connector
+from tabulate import tabulate
+
+
+class BaseDeDatos:
+
+    def __init__(self, host, user, password, database):
+        self.connection = mysql.connector.connect(
+            host=host, user=user, password=password, database=database
+        )
+        self.cursor = self.connection.cursor()
+
+    def ejecutar_sentencia(self, sentencia):
+        self.cursor.execute(sentencia)
+        self.connection.commit()
+
+    def obtener_resultados(self, sentencia):
+        self.cursor.execute(sentencia)
+        return self.cursor.fetchall()
 
 
 class Libro:
@@ -7,53 +25,80 @@ class Libro:
         self.titulo = titulo
         self.autor = autor
         self.isbn = isbn
-        self.disponibilidad = True
-
-    def prestar(self):
-        self.disponibilidad = False
 
 
 class Biblioteca:
 
-    def __init__(self):
+    def __init__(self, base_de_datos):
+        self.base_de_datos = base_de_datos
         self.libros = []
 
     def agregar_libro(self, libro):
         self.libros.append(libro)
 
     def mostrar_libros_disponibles(self):
-        for libro in self.libros:
-            if libro.disponibilidad:
-                print(libro.titulo)
+        sentencia = "SELECT * FROM libros"
+        datos = self.base_de_datos.obtener_resultados(sentencia)
+        print(tabulate(datos, headers=[
+              "ID", "TITULO", "AUTOR", "ISBN", "DISPONIBILIDAD"], tablefmt="pipe"))
 
-    def enviar_datos_a_base_de_datos(self):
-        # Conectamos a la base de datos
-        connection = mysql.connector.connect(
-            host="localhost", user="root", password="", database="biblioteca"
-        )
-        cursor = connection.cursor()
+    def prestar_libros(self):
+        sentencia = "SELECT * FROM libros WHERE disponibilidad = 1"
+        datos = self.base_de_datos.obtener_resultados(sentencia)
+        id_libro = int(input(
+            "Ingrese el id del libro que desea prestar: "))
+        for libro_en_biblioteca in datos:
+            if libro_en_biblioteca[0] == id_libro:
+                sentencia = f"UPDATE libros SET disponibilidad = 0 WHERE id = '{id_libro}'"
+                base_de_datos.ejecutar_sentencia(sentencia)
 
-        # Insertamos cada libro en la base de datos
-        for libro in self.libros:
-            cursor.execute("INSERT INTO libros (titulo, autor, isbn, disponibilidad) VALUES (%s, %s, %s, %s)",
-                           (libro.titulo, libro.autor, libro.isbn, libro.disponibilidad))
+    def devolver_libros(self):
+        sentencia = "SELECT * FROM libros WHERE disponibilidad = 0"
+        datos = self.base_de_datos.obtener_resultados(sentencia)
+        id_libro = int(input(
+            "Ingrese el id del libro que desea devolver: "))
+        for libro_en_biblioteca in datos:
+            if libro_en_biblioteca[0] == id_libro:
+                sentencia = f"UPDATE libros SET disponibilidad = 1 WHERE id = '{id_libro}'"
+                base_de_datos.ejecutar_sentencia(sentencia)
 
-        # Guardamos los cambios en la base de datos
-        connection.commit()
 
-        # Cerramos la conexión con la base de datos
-        connection.close()
+if __name__ == "__main__":
+    base_de_datos = BaseDeDatos("localhost", "root", "", "biblioteca")
+    biblioteca = Biblioteca(base_de_datos)
 
+    while True:
+        select = int(input("Ingrese la opción que desea realizar\n" +
+                           "1. Agregar un libro a la biblioteca\n" +
+                           "2. Eliminar un libro de la biblioteca\n" +
+                           "3. Mostrar los libros de la biblioteca\n" +
+                           "4. Prestar el libro\n" +
+                           "5. Devolver el libro\n" +
+                           "6. Salir del menú\n" +
+                           "$ "))
 
-# Creamos un libro
-libro = Libro("El Quijote", "Miguel de Cervantes", "978-84-239-0264-7")
+        match select:
+            case 1:
+                libro = Libro(input("Ingrese el titulo del libro a agregar: "), input(
+                    "Ingrese el autor del libro a agregar: "), input("Ingrese el ISBN del libro a agregar: "))
+                biblioteca.agregar_libro(libro)
 
-# Agregamos el libro a la biblioteca
-biblioteca = Biblioteca()
-biblioteca.agregar_libro(libro)
+            case 2:
+                id_libro = input("Ingrese el id del libro a eliminar: ")
+                sentencia = f"DELETE FROM libros WHERE id = {id_libro}"
+                base_de_datos.ejecutar_sentencia(sentencia)
 
-# Imprimimos los libros disponibles
-biblioteca.mostrar_libros_disponibles()
+            case 3:
+                biblioteca.mostrar_libros_disponibles()
 
-# Enviamos los datos a la base de datos
-biblioteca.enviar_datos_a_base_de_datos()
+            case 4:
+                biblioteca.prestar_libros()
+
+            case 5:
+                biblioteca.devolver_libros()
+
+            case 6:
+                print("Has salido del menú de opciones")
+                break
+            case _:
+                print("Opción incorrectamente seleccionada")
