@@ -18,6 +18,16 @@ class BaseDeDatos:
         self.cursor.execute(sentencia)
         return self.cursor.fetchall()
 
+class Usuario:
+    def __init__(self):
+        self.cedula = None
+        self.nombre = None
+        self.apellido = None
+        self.fecha_nacimiento = None
+        self.nacionalidad = None
+        self.correo = None
+        self.telefono = None
+
 
 class Libro:
 
@@ -26,7 +36,7 @@ class Libro:
         self.autor = autor
         self.isbn = isbn
         self.disponibilidad = True
-
+    
 
 class Biblioteca:
 
@@ -65,6 +75,32 @@ class Biblioteca:
                 sentencia = f"UPDATE libros SET disponibilidad = 1 WHERE id = '{id_libro}'"
                 base_de_datos.ejecutar_sentencia(sentencia)
 
+    def crear_usuario(self):
+        usuario = Usuario()
+        usuario.cedula = input("Ingrese su cédula: ")
+        usuario.nombre = input("Ingrese su nombre: ")
+        usuario.apellido = input("Ingrese su apellido: ")
+        usuario.fecha_nacimiento = input("Ingrese su fecha de nacimiento: ")
+        usuario.nacionalidad = input("Ingrese su nacionalidad: ")
+        usuario.correo = input("Ingrese su correo: ")
+        usuario.telefono = input("Ingrese su telefono: ")
+
+    def validar_usuario(self):
+        cedula = input("Ingrese su cedula: ")
+        print("Validando usuario entre la base de datos, por favor espere...")
+        sentencia = f"SELECT * FROM usuarios"
+        datos = self.base_de_datos.obtener_resultados(sentencia)
+        print(tabulate(datos, headers=[
+              "ID", "CEDULA", "NOMBRE", "APELLIDO", "FECHA_NACIMIENTO", "NACIONALIDAD", "CORREO", "TELEFONO"], tablefmt="pipe"))
+        for dato in datos:
+            id, ced, nombre, apellido, fecha_nacimiento, nacionalidad, correo, telefono = dato
+        if(cedula == ced):
+            print("El usuario es válido para prestar libros")
+            biblioteca.prestar_libros()
+        else:
+            print("El usuario no es válido para prestar libros, primero debe de crear un usuario")
+            crear_usuario()
+    
 
 if __name__ == "__main__":
     base_de_datos = BaseDeDatos("localhost", "root", "1234", "biblioteca")
@@ -96,7 +132,7 @@ if __name__ == "__main__":
                 biblioteca.mostrar_libros_disponibles()
 
             case "4":
-                biblioteca.prestar_libros()
+                biblioteca.validar_usuario()
 
             case "5":
                 biblioteca.devolver_libros()
