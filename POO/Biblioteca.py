@@ -4,17 +4,17 @@ from tabulate import tabulate
 
 class BaseDeDatos:
 
-    def __init__(self, host, user, password, database):
-        self.connection = mysql.connector.connect(
-            host=host, user=user, password=password, database=database
+    def __init__(self, host, usuario, contrasenna, database):
+        self.conexion = mysql.connector.connect(
+            host=host, user=usuario, password=contrasenna, database=database
         )
-        self.cursor = self.connection.cursor()
+        self.cursor = self.conexion.cursor()
 
-    def ejecutar_sentencia(self, sentencia):
-        self.cursor.execute(sentencia)
+    def ejecutar_sentencia(self, consulta):
+        self.cursor.execute(consulta)
         self.connection.commit()
 
-    def obtener_resultados(self, sentencia):
+    def obtener_resultados(self, consulta):
         self.cursor.execute(sentencia)
         return self.cursor.fetchall()
 
@@ -49,15 +49,34 @@ class Biblioteca:
         sentencia = f"INSERT INTO libros (titulo, autor, isbn, disponibilidad) VALUES {(self.libros[0].titulo, self.libros[0].autor, self.libros[0].isbn, self.libros[0].disponibilidad)}"
         self.base_de_datos.ejecutar_sentencia(sentencia)
 
+    def obtener_libros_disponibles(self):
+        """
+        Obtiene los libros disponibles de la base de datos.
+    
+        Returns:
+            Una lista con los libros disponibles.
+        """
+
+    consulta = "SELECT * FROM libros WHERE disponibilidad = 1"
+    datos = self.base_de_datos.obtener_resultados(consulta)
+    return datos
+
     def mostrar_libros_disponibles(self):
-        sentencia = "SELECT * FROM libros"
-        datos = self.base_de_datos.obtener_resultados(sentencia)
-        print(tabulate(datos, headers=[
-              "ID", "TITULO", "AUTOR", "ISBN", "DISPONIBILIDAD"], tablefmt="pipe"))
+        """
+        Muestra los libros disponibles.
+    
+        Args:
+            libros: La lista con los libros disponibles.
+        """
+
+        libros = self.obtener_libros_disponibles()
+        print(tabulate(libros, headers=[
+            "ID", "TITULO", "AUTOR", "ISBN", "DISPONIBILIDAD"], tablefmt="pipe"))
+
 
     def prestar_libros(self):
-        sentencia = "SELECT * FROM libros WHERE disponibilidad = 1"
-        datos = self.base_de_datos.obtener_resultados(sentencia)
+        consulta = "SELECT * FROM libros WHERE disponibilidad = 1"
+        datos = self.base_de_datos.obtener_resultados(consulta)
         id_libro = int(input(
             "Ingrese el id del libro que desea prestar: "))
         for libro_en_biblioteca in datos:
@@ -66,8 +85,8 @@ class Biblioteca:
                 base_de_datos.ejecutar_sentencia(sentencia)
 
     def devolver_libros(self):
-        sentencia = "SELECT * FROM libros WHERE disponibilidad = 0"
-        datos = self.base_de_datos.obtener_resultados(sentencia)
+        consulta = "SELECT * FROM libros WHERE disponibilidad = 0"
+        datos = self.base_de_datos.obtener_resultados(consulta)
         id_libro = int(input(
             "Ingrese el id del libro que desea devolver: "))
         for libro_en_biblioteca in datos:
@@ -88,8 +107,8 @@ class Biblioteca:
     def validar_usuario(self):
         cedula = input("Ingrese su cedula: ")
         print("Validando usuario entre la base de datos, por favor espere...")
-        sentencia = f"SELECT * FROM usuarios"
-        datos = self.base_de_datos.obtener_resultados(sentencia)
+        consulta = f"SELECT * FROM usuarios"
+        datos = self.base_de_datos.obtener_resultados(consulta)
         print(tabulate(datos, headers=[
               "ID", "CEDULA", "NOMBRE", "APELLIDO", "FECHA_NACIMIENTO", "NACIONALIDAD", "CORREO", "TELEFONO"], tablefmt="pipe"))
         for dato in datos:
