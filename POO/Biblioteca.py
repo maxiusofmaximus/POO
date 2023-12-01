@@ -10,12 +10,12 @@ class BaseDeDatos:
         )
         self.cursor = self.conexion.cursor()
 
-    def ejecutar_sentencia(self, consulta):
+    def ejecutar_consulta(self, consulta):
         self.cursor.execute(consulta)
         self.connection.commit()
 
     def obtener_resultados(self, consulta):
-        self.cursor.execute(sentencia)
+        self.cursor.execute(consulta)
         return self.cursor.fetchall()
 
 class Usuario:
@@ -46,8 +46,8 @@ class Biblioteca:
 
     def agregar_libro(self, libro):
         self.libros.append(libro)
-        sentencia = f"INSERT INTO libros (titulo, autor, isbn, disponibilidad) VALUES {(self.libros[0].titulo, self.libros[0].autor, self.libros[0].isbn, self.libros[0].disponibilidad)}"
-        self.base_de_datos.ejecutar_sentencia(sentencia)
+        consulta = f"INSERT INTO libros (titulo, autor, isbn, disponibilidad) VALUES {(self.libros[0].titulo, self.libros[0].autor, self.libros[0].isbn, self.libros[0].disponibilidad)}"
+        self.base_de_datos.ejecutar_consulta(consulta)
 
     def obtener_libros_disponibles(self):
         """
@@ -57,9 +57,9 @@ class Biblioteca:
             Una lista con los libros disponibles.
         """
 
-    consulta = "SELECT * FROM libros WHERE disponibilidad = 1"
-    datos = self.base_de_datos.obtener_resultados(consulta)
-    return datos
+        consulta = "SELECT * FROM libros WHERE disponibilidad = 1"
+        datos = self.base_de_datos.obtener_resultados(consulta)
+        return datos
 
     def mostrar_libros_disponibles(self):
         """
@@ -81,8 +81,8 @@ class Biblioteca:
             "Ingrese el id del libro que desea prestar: "))
         for libro_en_biblioteca in datos:
             if libro_en_biblioteca[0] == id_libro:
-                sentencia = f"UPDATE libros SET disponibilidad = 0 WHERE id = '{id_libro}'"
-                base_de_datos.ejecutar_sentencia(sentencia)
+                consulta = f"UPDATE libros SET disponibilidad = 0 WHERE id = '{id_libro}'"
+                base_de_datos.ejecutar_consulta(consulta)
 
     def devolver_libros(self):
         consulta = "SELECT * FROM libros WHERE disponibilidad = 0"
@@ -91,8 +91,8 @@ class Biblioteca:
             "Ingrese el id del libro que desea devolver: "))
         for libro_en_biblioteca in datos:
             if libro_en_biblioteca[0] == id_libro:
-                sentencia = f"UPDATE libros SET disponibilidad = 1 WHERE id = '{id_libro}'"
-                base_de_datos.ejecutar_sentencia(sentencia)
+                consulta = f"UPDATE libros SET disponibilidad = 1 WHERE id = '{id_libro}'"
+                base_de_datos.ejecutar_consulta(consulta)
 
     def crear_usuario(self):
         usuario = Usuario()
@@ -115,10 +115,10 @@ class Biblioteca:
             id, ced, nombre, apellido, fecha_nacimiento, nacionalidad, correo, telefono = dato
         if(cedula == ced):
             print("El usuario es válido para prestar libros")
-            biblioteca.prestar_libros()
+            self.prestar_libros()
         else:
             print("El usuario no es válido para prestar libros, primero debe de crear un usuario")
-            crear_usuario()
+            self.crear_usuario()
     
 
 if __name__ == "__main__":
@@ -144,8 +144,8 @@ if __name__ == "__main__":
 
             case "2":
                 id_libro = input("Ingrese el id del libro a eliminar: ")
-                sentencia = f"DELETE FROM libros WHERE id = {id_libro}"
-                base_de_datos.ejecutar_sentencia(sentencia)
+                consulta = f"DELETE FROM libros WHERE id = {id_libro}"
+                base_de_datos.ejecutar_consulta(consulta)
 
             case "3":
                 biblioteca.mostrar_libros_disponibles()
